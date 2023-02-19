@@ -9,7 +9,14 @@ const friendRoute = require('./Routes/FriendRoute');
 const msRoute = require('./Routes/messageRoute');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://playchat.netlify.app"],
+    methods: ["GET", "POST", "DELETE"],
+    credentials: true,
+    origin: true,
+  })
+);
 app.use("/src/img",express.static("./src/img"));
 
 app.use("/auth",useRoute);
