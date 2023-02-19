@@ -21,7 +21,7 @@ const {Server} = require('socket.io');
 const server = require('http').createServer(app);
 const io = new Server(server,{
     cors:{
-        origin:"http://localhost:3000",
+        origin:"https://playchat.netlify.app",
         methods:["GET","POST"]
     }});
 server.listen(process.env.PORT,()=>console.log("http://localhost:"+process.env.PORT));
