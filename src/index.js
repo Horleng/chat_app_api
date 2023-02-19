@@ -32,14 +32,10 @@ const getUser = (userId)=>{
 io.on("connection",socket=>{
     socket.on("disconnect",()=>{
         users = users.filter(user=>user.socketId!==socket.id);
-        console.log(users);
-        console.log(users.length)
     });
     socket.on("joinChat",({authId})=>{
         !users.some(user=>user.userId===authId) && users.push({userId:authId,socketId:socket.id});
         socket.join(socket.id);
-        console.log(users);
-        console.log(users.length);
     })
     socket.on("sendMessage",data=>{
         const receiver = getUser(data.receiverId);
