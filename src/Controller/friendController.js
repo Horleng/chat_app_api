@@ -46,10 +46,10 @@ const Friend = {
         const userId = req.query.userId;
         if(userId){
             try{
-                const friends = await friendModel.find({members:{$in:userId}});
-                if(friends.length){
-                    res.status(200).json({message:"successfully",data:friends});
-                }
+                await friendModel.find({members:{$in:userId}})
+                .then(re=>{
+                    res.status(200).json({message:"successfully",data:re});
+                })
             }catch(error){
                 console.log(error.message);
                 res.status(500).json(error.message);
