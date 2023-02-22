@@ -4,6 +4,14 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const UserModel = require("../Model/userModel");
 const { sendMail } = require("../Mail/sendMs");
+const cloudinary = require('cloudinary').v2;
+require('dotenv').config();
+cloudinary.config({
+    cloud_name:process.env.CLOUND_NAME,
+    secure:true,
+    api_key:process.env.API_KEY,
+    api_secret:process.env.API_SECRET
+});
 const User = {
     verifyEmail : async(req,res)=>{
         const email = req.body.email;
@@ -69,41 +77,65 @@ const User = {
     },
     userInformation : async(req,res)=>{
         const id = req.query.id;
-        const {firstName,lastName,birth,sex,purpos} = req.body;
-        const img = `http://${req.headers.host}/src/img/${req.file.filename}`;
-        try{
-            await UserModel.findByIdAndUpdate({_id:id},{firstName,lastName,birth,sex,img,purpos})
-            .then(()=>{
-                res.status(201).json({message:"your information updated",success:true});
-            })
-        }catch(err){
-            console.log(err.message);
-        }
-    },
-    changeImg : async(req,res)=>{
-        const img = `http://${req.headers.host}/src/img/${req.file.filename}`;
-        const id = req.query.id;
-        if(img && id){
+        const {firstName,lastName,birth,sex,purpos,img} = req.body;
+        if(id){
             try{
-                await UserModel.findByIdAndUpdate({_id:id},{img})
-                .then(async(result)=>{
-                    if(result){
-                        await UserModel.findById(id).then(async(currdata)=>{
-                            if(currdata){
-                                const token = jwt.sign({
-                                    data:currdata
-                                },process.env.JWT_KEY,{expiresIn:"24h"})
-                                res.status(200).json({message:"Change photo successfully",token:token,data:currdata});
-                            }else res.status(400).json({message:"system error"});
-                        });
-                    }
-                    else res.status(400).json({message:"system error"});
-                        
-                })
+                if(img){    
+                    const isUploaded = await cloudinary.uploader.upload(img, {
+                        resource_type:"auto",
+                        folder:"ChatApps"
+                    })
+                    if(isUploaded){
+                        await UserModel.findByIdAndUpdate(id,{firstName,lastName,birth,sex,img:isUploaded.secure_url,purpos})
+                        .then(()=>{
+                            res.status(201).json({message:"your information updated",success:true});
+                        })
+                    }else res.status(400).json({message:"Can't upload image to server,It's maybe your internet error"});
+                }else {
+                    await UserModel.findByIdAndUpdate(id,{firstName,lastName,birth,sex,img:"",purpos})
+                    .then(()=>{
+                        res.status(201).json({message:"your information updated",success:true});
+                    })
+                }
             }catch(err){
                 console.log(err.message);
             }
-        }
+        }else res.status(400).json({message:"System error"});
+    },
+    changeImg : async(req,res)=>{
+        const id = req.query.id;
+        const img = req.body.img;
+        if(img){
+            if(id){
+                try{
+                    await cloudinary.uploader.upload(img, {
+                        resource_type:"auto",
+                        folder:"ChatApps"
+                    })
+                    .then(async(upl)=>{
+                        if(upl){
+                            await UserModel.findByIdAndUpdate(id,{img:upl.secure_url})
+                            .then(async(isUpdate)=>{
+                                if(isUpdate){
+                                    await UserModel.findById(id)
+                                    .then(async(currdata)=>{
+                                        if(currdata){
+                                            const token = jwt.sign({
+                                                data:currdata
+                                            },process.env.JWT_KEY,{expiresIn:"7d"})
+                                            res.status(200).json({message:"Change photo successfully",token:token,data:currdata});
+                                        }else res.status(400).json({message:"system error"});
+                                    });
+                                }  
+                                else res.status(400).json({message:"System error"});
+                        })
+                        }else res.status(400).json({message:"Can't upload image,It's maybe server error"});
+                    })
+                }catch(err){
+                    console.log(err.message);
+                }
+            }else res.status(400).json({message:"System error"});
+        }else res.status(400).json({message:"image is required"});
     },
     changeInformation : async(req,res)=>{
         const id = req.query.id;

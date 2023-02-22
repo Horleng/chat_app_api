@@ -1,12 +1,11 @@
 const User = require("../Controller/userController");
-const multer = require("../Multer/multer");
 const useRoute = require("express").Router();
 const verifyTokent = require("../middleware/verifyToken");
 useRoute.post("/verifyEmail",User.verifyEmail);
 useRoute.post("/verified",User.checkVerify);
 useRoute.post("/createAccount",User.createAccount);
-useRoute.post("/userInformation",multer.single("img"),User.userInformation);
-useRoute.post("/changePhoto",multer.single("img"),User.changeImg);
+useRoute.post("/userInformation",User.userInformation);
+useRoute.post("/changePhoto",User.changeImg);
 useRoute.post("/changInformation",User.changeInformation);
 useRoute.post("/changeEmailAndPassword",User.changeEmailAndPassword);
 useRoute.post("/login",User.login);

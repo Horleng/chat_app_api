@@ -7,18 +7,16 @@ const bodyParser = require('body-parser');
 const useRoute = require('./Routes/UserRoute');
 const friendRoute = require('./Routes/FriendRoute');
 const msRoute = require('./Routes/messageRoute');
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit:"50mb"}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: ["https://playchat.netlify.app"],
+    origin: ["http://localhost:3000"],
     methods: ["GET", "POST", "DELETE"],
     credentials: true,
     origin: true,
   })
 );
-app.use("/src/img",express.static("./src/img"));
-
 app.use("/auth",useRoute);
 app.use("/friend",friendRoute);
 app.use("/message",msRoute);
@@ -37,6 +35,7 @@ const getUser = (userId)=>{
     return users.find(user=>user.userId === userId);
 }
 io.on("connection",socket=>{
+    console.log('true')
     socket.on("disconnect",()=>{
         users = users.filter(user=>user.socketId!==socket.id);
     });
